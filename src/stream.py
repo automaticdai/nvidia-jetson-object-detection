@@ -14,7 +14,7 @@ class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
 
 BOUNDARY = "frame"
 PAGE = b"""<!doctype html>
-<html><head><meta charset="utf-8"><title>jetson-object-detection</title>
+<html><head><meta charset="utf-8"><title>nvidia-jetson-object-detection</title>
 <style>body{margin:0;background:#111;display:flex;justify-content:center;align-items:center;height:100vh}
 img{max-width:100%;max-height:100vh}</style></head>
 <body><img src="/stream.mjpg" alt="live detection"></body></html>

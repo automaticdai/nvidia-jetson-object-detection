@@ -1,8 +1,8 @@
-# jetson-object-detection
+# nvidia-jetson-object-detection
 
-![](https://img.shields.io/github/stars/automaticdai/jetson-object-detection) ![](https://img.shields.io/github/forks/automaticdai/jetson-object-detection) ![](https://img.shields.io/github/license/automaticdai/jetson-object-detection)
+![](https://img.shields.io/github/stars/automaticdai/nvidia-jetson-object-detection) ![](https://img.shields.io/github/forks/automaticdai/nvidia-jetson-object-detection) ![](https://img.shields.io/github/license/automaticdai/nvidia-jetson-object-detection)
 
-![jetson-object-detection](./images/cover.png)
+![nvidia-jetson-object-detection](./images/cover.png)
 
 Following the success of my other project, [rpi-object-detection](https://github.com/automaticdai/rpi-object-detection), I am making this new project focusing on Nvidia Jetson. As many configurations are different on Jetson, I think this is a better way to have a new repo, rather than a hybrid integration to support multiple platforms. Due to the on-board GPU, with Jetson, I am going to produce more interesting CV-based projects.
 
@@ -40,8 +40,8 @@ Note that this does not mean the code won't be able to run on these boards --- I
 
 ## Quick Start: Camera Test
 ```bash
-git clone https://github.com/automaticdai/jetson-object-detection.git
-cd jetson-object-detection
+git clone https://github.com/automaticdai/nvidia-jetson-object-detection.git
+cd nvidia-jetson-object-detection
 
 # CSI camera (default). Press 'q' to quit.
 python3 src/camera_test.py
