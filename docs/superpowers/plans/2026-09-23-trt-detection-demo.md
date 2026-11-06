@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-23-trt-detection-demo-design.md`
 
+**Status (2026-11-06):** Done except Task 6 Steps 1–4 (build engines, run each source, save a video, and measure FPS on the AGX Orin). The README's Orin FPS table still says *to be measured*. Tasks 1–5 were committed directly to main, with fixes and the README in PRs #1–#2. Later features (tracking, seg/pose, `--threaded`, `--stream`, benchmark, the Nano TensorRT backend) went beyond this plan in PRs #3–#8.
+
 ## Global Constraints
 
 - Python 3.10+ (JetPack 6 system Python).
@@ -60,7 +62,7 @@ Tasks 1 and 6 need **the Jetson (AGX Orin) and a person at it**. Tasks 2–5 run
 - Consumes: the existing `src/camera_test.py` (already supports `--source csi|usb|<file>` and `--headless`).
 - Produces: `docker/run.sh [--image IMAGE] [command...]`, used by the README and by Task 6.
 
-- [ ] **Step 1: Write `docker/run.sh`**
+- [x] **Step 1: Write `docker/run.sh`**
 
 ```bash
 #!/usr/bin/env bash
@@ -118,12 +120,12 @@ exec docker run "${args[@]}" "$IMAGE" "$@"
 
 Then: `chmod +x docker/run.sh`
 
-- [ ] **Step 2: Syntax check**
+- [x] **Step 2: Syntax check**
 
 Run: `bash -n docker/run.sh && (command -v shellcheck >/dev/null && shellcheck docker/run.sh || echo "shellcheck not installed, skipped")`
 Expected: no output from `bash -n`; shellcheck clean or skipped.
 
-- [ ] **Step 3: Append to `.gitignore`**
+- [x] **Step 3: Append to `.gitignore`**
 
 ```gitignore
 
@@ -136,7 +138,7 @@ models/
 *.avi
 ```
 
-- [ ] **Step 4: [Jetson] Pull the image and record its Ultralytics version**
+- [x] **Step 4: [Jetson] Pull the image and record its Ultralytics version**
 
 Run on the Orin:
 ```bash
@@ -144,7 +146,7 @@ docker/run.sh python3 -c "import ultralytics, cv2; print('ultralytics', ultralyt
 ```
 Expected: the versions are printed. Write down the Ultralytics version and whether GStreamer is `YES` or `NO`.
 
-- [ ] **Step 5: [Jetson] Risk check — CSI camera inside the container**
+- [x] **Step 5: [Jetson] Risk check — CSI camera inside the container**
 
 Run (with a monitor or X forwarding, after `xhost +local:docker`):
 ```bash
@@ -156,7 +158,7 @@ Expected: the CSI preview shows and prints ~30 FPS.
 **Most likely outcome:** the image ships `opencv-python-headless` (per its Dockerfile), so the first, windowed command prints "no GUI support", and the CSI commands print "no GStreamer support". In that case only `--headless` runs of USB cameras and files work in the stock image.
 **Decision gate:** if the CSI camera fails with "no GStreamer support", or windows fail with "no GUI support", **stop and report to the user**. Continue Tasks 2–5 (they don't depend on this), but Task 6 waits for the user to choose a fallback (spec, Risks §1).
 
-- [ ] **Step 6: [Jetson] Pin the image**
+- [x] **Step 6: [Jetson] Pin the image**
 
 Look for a versioned tag matching the version from Step 4 (e.g. `<version>-jetson-jetpack6`) on https://hub.docker.com/r/ultralytics/ultralytics/tags. If there is one, replace `latest-jetson-jetpack6` in `run.sh` with it. If not, pin by digest:
 ```bash
@@ -164,7 +166,7 @@ docker inspect --format '{{index .RepoDigests 0}}' ultralytics/ultralytics:lates
 ```
 and use the printed `ultralytics/ultralytics@sha256:...` as the R36 image. Leave the R38 (Thor) line as `latest-nvidia-arm64`; it's untested.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add docker/run.sh .gitignore
@@ -190,7 +192,7 @@ git commit -m "Add Docker runner for Ultralytics Jetson image; ignore models and
   - `add_camera_args(parser: argparse.ArgumentParser) -> None`, which adds `--source --sensor-id --device --width --height --fps --flip`
   - `display_available() -> bool`
 
-- [ ] **Step 1: Test setup**
+- [x] **Step 1: Test setup**
 
 `requirements-dev.txt`:
 ```text
@@ -212,7 +214,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 Run: `python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt` (on a PC; `.venv/` is already in `.gitignore`).
 
-- [ ] **Step 2: Write the failing tests** — `tests/test_camera.py`
+- [x] **Step 2: Write the failing tests** — `tests/test_camera.py`
 
 ```python
 import argparse
@@ -274,12 +276,12 @@ def test_open_capture_from_args_passes_source(monkeypatch):
     assert seen == dict(source="usb", sensor_id=0, device=2, width=640, height=480, fps=60, flip=0)
 ```
 
-- [ ] **Step 3: Run the tests to check they fail**
+- [x] **Step 3: Run the tests to check they fail**
 
 Run: `.venv/bin/python -m pytest tests/test_camera.py -v`
 Expected: collection error `ModuleNotFoundError: No module named 'camera'`.
 
-- [ ] **Step 4: Write `src/camera.py`**
+- [x] **Step 4: Write `src/camera.py`**
 
 ```python
 """Shared camera input for Jetson: CSI cameras (GStreamer), USB webcams (V4L2) and video files."""
@@ -358,12 +360,12 @@ def display_available():
     return bool(os.environ.get("DISPLAY"))
 ```
 
-- [ ] **Step 5: Run the tests to check they pass**
+- [x] **Step 5: Run the tests to check they pass**
 
 Run: `.venv/bin/python -m pytest tests/test_camera.py -v`
 Expected: 6 passed.
 
-- [ ] **Step 6: Rewrite `src/camera_test.py` to use `camera.py`**
+- [x] **Step 6: Rewrite `src/camera_test.py` to use `camera.py`**
 
 ```python
 """Camera test for Jetson: open a CSI camera, USB webcam or video file and show frames with FPS.
@@ -439,7 +441,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 7: Smoke test `camera_test.py` on a generated video**
+- [x] **Step 7: Smoke test `camera_test.py` on a generated video**
 
 Run:
 ```bash
@@ -450,7 +452,7 @@ Run:
 ```
 Expected: (1) at least one `... FPS (320x240)` line, then `Failed to grab frame ...`, `exit=0`; (2) the no-GStreamer message, `exit=1`; (3) `Failed to open camera source '/tmp/nope.mp4'.`, `exit=1`. None of them print a traceback.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/camera.py src/camera_test.py tests/conftest.py tests/test_camera.py requirements-dev.txt
@@ -473,7 +475,7 @@ git commit -m "Extract shared camera module; add unit test setup"
     - `.averages() -> dict[str, float]`: mean ms per stage over the last `window` samples, in the order stages were first added
     - `.fps() -> float`: frames per second over the last `window` frame intervals; `0.0` until there are 2 ticks
 
-- [ ] **Step 1: Write the failing tests** — `tests/test_timing.py`
+- [x] **Step 1: Write the failing tests** — `tests/test_timing.py`
 
 ```python
 import pytest
@@ -540,12 +542,12 @@ def test_measure_records_even_on_exception():
     assert "capture" in t.averages()
 ```
 
-- [ ] **Step 2: Run the tests to check they fail**
+- [x] **Step 2: Run the tests to check they fail**
 
 Run: `.venv/bin/python -m pytest tests/test_timing.py -v`
 Expected: collection error `ModuleNotFoundError: No module named 'timing'`.
 
-- [ ] **Step 3: Write `src/timing.py`**
+- [x] **Step 3: Write `src/timing.py`**
 
 ```python
 """Rolling per-stage latency and frame-rate measurement."""
@@ -588,12 +590,12 @@ class StageTimer:
         return (len(self._frame_times) - 1) / elapsed if elapsed > 0 else 0.0
 ```
 
-- [ ] **Step 4: Run the tests to check they pass**
+- [x] **Step 4: Run the tests to check they pass**
 
 Run: `.venv/bin/python -m pytest tests/test_timing.py -v`
 Expected: 8 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/timing.py tests/test_timing.py
@@ -616,7 +618,7 @@ git commit -m "Add rolling stage timer"
   - `export_kwargs(precision: str, imgsz: int, calib_data: str | None, quantize_api: bool) -> dict`
   - `parse_args(argv=None) -> argparse.Namespace`, `main(argv=None) -> int`
 
-- [ ] **Step 1: Write the failing tests** — `tests/test_export.py`
+- [x] **Step 1: Write the failing tests** — `tests/test_export.py`
 
 ```python
 from pathlib import Path
@@ -695,12 +697,12 @@ def test_main_skips_existing_engine(monkeypatch, tmp_path, capsys):
     assert "already exists" in capsys.readouterr().out
 ```
 
-- [ ] **Step 2: Run the tests to check they fail**
+- [x] **Step 2: Run the tests to check they fail**
 
 Run: `.venv/bin/python -m pytest tests/test_export.py -v`
 Expected: collection error `ModuleNotFoundError: No module named 'export'`.
 
-- [ ] **Step 3: Write `src/export.py`**
+- [x] **Step 3: Write `src/export.py`**
 
 ```python
 """Build a TensorRT engine for a YOLO model with Ultralytics.
@@ -802,12 +804,12 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [ ] **Step 4: Run the tests to check they pass**
+- [x] **Step 4: Run the tests to check they pass**
 
 Run: `.venv/bin/python -m pytest tests/test_export.py -v`
 Expected: 18 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/export.py tests/test_export.py
@@ -832,7 +834,7 @@ git commit -m "Add TensorRT engine export script"
   - `missing_engine_message(engine: Path) -> str`
   - `load_model(engine: Path)`, which raises `RuntimeError`
 
-- [ ] **Step 1: Write the failing tests** — `tests/test_detect.py`
+- [x] **Step 1: Write the failing tests** — `tests/test_detect.py`
 
 ```python
 import math
@@ -917,12 +919,12 @@ def test_main_missing_engine_exits_1(tmp_path, capsys):
     assert "python3 src/export.py --model yolo11n --precision fp16 --imgsz 640" in capsys.readouterr().out
 ```
 
-- [ ] **Step 2: Run the tests to check they fail**
+- [x] **Step 2: Run the tests to check they fail**
 
 Run: `.venv/bin/python -m pytest tests/test_detect.py -v`
 Expected: collection error `ModuleNotFoundError: No module named 'detect'`.
 
-- [ ] **Step 3: Write `src/detect.py`**
+- [x] **Step 3: Write `src/detect.py`**
 
 ```python
 """Live YOLO object detection on Jetson with a TensorRT engine.
@@ -1106,17 +1108,17 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [ ] **Step 4: Run the tests to check they pass**
+- [x] **Step 4: Run the tests to check they pass**
 
 Run: `.venv/bin/python -m pytest tests/test_detect.py -v`
 Expected: 18 passed.
 
-- [ ] **Step 5: Run the full suite**
+- [x] **Step 5: Run the full suite**
 
 Run: `.venv/bin/python -m pytest tests -v`
 Expected: 50 passed (6 camera + 8 timing + 18 export + 18 detect).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/detect.py tests/test_detect.py
@@ -1166,7 +1168,7 @@ Expected: a frame count > 0 (the file is playable even after Ctrl+C).
 
 For each engine, run on the CSI source (or USB if CSI is unavailable) with `--headless` for ~30 s, and note the steady FPS and inference ms. Also note the power mode (`sudo nvpmodel -q`) and whether `sudo jetson_clocks` was on.
 
-- [ ] **Step 5: Update the README**
+- [x] **Step 5: Update the README**
 
 Insert after the Quick Start section, replacing each value in the table with the numbers measured in Step 4:
 
@@ -1217,7 +1219,7 @@ The detection demo uses [Ultralytics](https://github.com/ultralytics/ultralytics
 
 Then check that no `<MODE>`, `<FPS>`, `<MS>` or `<on/off>` markers are left: `grep -nE '<(MODE|FPS|MS|on/off)>' README.md` should print nothing.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add README.md
